@@ -7,9 +7,8 @@ import ListImportExport, { type ListImportExportType } from './ListImportExport'
 import { handleRemove, handleSync } from './listAction'
 import ListMusicSort, { type ListMusicSortType } from './ListMusicSort'
 import DuplicateMusic, { type DuplicateMusicType } from './DuplicateMusic'
-import MusicPositionSelectModal, { type MusicPositionSelectModalType } from './MusicPositionSelectModal'
-import MusicPositionModal, { type MusicPositionModalType } from '../MusicList/MusicPositionModal'
-import { updateListMusicPosition } from '@/core/list'
+import ListPositionModal, { type ListPositionModalType } from './ListPositionModal'
+import { updateUserListPosition } from '@/core/list'
 
 
 export default () => {
@@ -19,8 +18,7 @@ export default () => {
   const listMusicSortRef = useRef<ListMusicSortType>(null)
   const duplicateMusicRef = useRef<DuplicateMusicType>(null)
   const listImportExportRef = useRef<ListImportExportType>(null)
-  const musicPositionSelectModalRef = useRef<MusicPositionSelectModalType>(null)
-  const musicPositionModalRef = useRef<MusicPositionModalType>(null)
+  const listPositionModalRef = useRef<ListPositionModalType>(null)
 
   useEffect(() => {
     let isInited = false
@@ -47,21 +45,9 @@ export default () => {
           <ListMusicSort ref={listMusicSortRef} />
           <DuplicateMusic ref={duplicateMusicRef} />
           <ListImportExport ref={listImportExportRef} />
-          <MusicPositionSelectModal
-            ref={musicPositionSelectModalRef}
-            onSelected={(listInfo, musicInfo, index) => {
-              musicPositionModalRef.current?.show({
-                musicInfo,
-                selectedList: [],
-                index,
-                listId: listInfo.id,
-                single: true,
-              })
-            }}
-          />
-          <MusicPositionModal
-            ref={musicPositionModalRef}
-            onUpdatePosition={(info, postion) => { void updateListMusicPosition(info.listId, postion, [info.musicInfo.id]) }}
+          <ListPositionModal
+            ref={listPositionModalRef}
+            onUpdatePosition={(listInfo, position) => { void updateUserListPosition(position, [listInfo.id]) }}
           />
           <ListMenu
             ref={listMenuRef}
@@ -74,7 +60,7 @@ export default () => {
             onRemove={info => { handleRemove(info) }}
             onSync={info => { handleSync(info) }}
             onSelectLocalFile={(info, position) => listImportExportRef.current?.selectFile(info, position)}
-            onChangePosition={info => musicPositionSelectModalRef.current?.show(info)}
+            onChangePosition={info => listPositionModalRef.current?.show(info)}
           />
           {/* <ImportExport actionType={actionType} visible={isShowChoosePath} hide={() => setShowChoosePath(false)} selectedListRef={selectedListRef} /> */}
         </>
