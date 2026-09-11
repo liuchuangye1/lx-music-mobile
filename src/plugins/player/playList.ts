@@ -147,6 +147,16 @@ export const initTrackInfo = async(musicInfo: LX.Player.PlayMusic, mInfo: LX.Pla
 }
 
 
+// 杀进程后服务重建等场景，原生播放器可能处于未 prepare 的空转状态，直接 play 无效，先 stop 复位再播放
+const playTrack = async(time: number) => {
+  const state = await TrackPlayer.getState()
+  if (state == State.None || state == State.Stopped) {
+    await TrackPlayer.stop()
+    if (time > 0) await TrackPlayer.seekTo(time)
+  }
+  await TrackPlayer.play()
+}
+
 const handlePlayMusic = async(musicInfo: LX.Player.PlayMusic, url: string, time: number) => {
 // console.log(tracks, time)
   const tracks = buildTracks(musicInfo, url)
@@ -168,14 +178,14 @@ const handlePlayMusic = async(musicInfo: LX.Player.PlayMusic, url: string, time:
       // TODO startupAutoPlay
       // if (startupAutoPlay) store.dispatch(playerAction.playMusic())
       } else {
-        await TrackPlayer.play()
+        await playTrack(time)
       }
     }
   } else {
     await TrackPlayer.pause()
     if (!isTempTrack(track.id as string)) {
       await TrackPlayer.seekTo(time)
-      await TrackPlayer.play()
+      await playTrack(time)
     }
   }
 
