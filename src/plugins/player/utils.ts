@@ -159,7 +159,8 @@ export const getPosition = async() => TrackPlayer.getPosition()
 export const getDuration = async() => TrackPlayer.getDuration()
 export const setStop = async() => {
   await TrackPlayer.stop()
-  if (!isEmpty()) await TrackPlayer.skipToNext()
+  // 队列末尾是静音占位轨道，播完自动前进后可能已无下一首，跳过失败忽略即可
+  if (!isEmpty()) await TrackPlayer.skipToNext().catch(() => {})
 }
 export const setLoop = async(loop: boolean) => TrackPlayer.setRepeatMode(loop ? RepeatMode.Off : RepeatMode.Track)
 
