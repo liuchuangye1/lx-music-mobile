@@ -112,7 +112,11 @@ export const isTempTrack = (trackId: string) => /\/\/default$/.test(trackId)
 
 export const getCurrentTrackId = async() => {
   const currentTrackIndex = await TrackPlayer.getCurrentTrack()
-  return list[currentTrackIndex]?.id
+  if (currentTrackIndex == null || currentTrackIndex < 0) return
+  // 直接从原生队列取曲目 id，避免多 JS 上下文（开发模式热重载/无头服务）下
+  // 各自的本地队列缓存不一致，导致误判当前歌曲为占位空轨而错误暂停播放
+  const track = await TrackPlayer.getTrack(currentTrackIndex) as LX.Player.Track | undefined
+  return track?.id
 }
 export const getCurrentTrack = async() => {
   const currentTrackIndex = await TrackPlayer.getCurrentTrack()
