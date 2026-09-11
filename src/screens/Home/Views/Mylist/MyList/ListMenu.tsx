@@ -74,6 +74,7 @@ export default forwardRef<ListMenuType, ListMenuProps>(({
     let rename = false
     let sync = false
     let remove = false
+    let change_position = false
     let local_file = !listState.fetchingListStatus[listInfo.id]
     let userList: LX.List.UserListInfo
     switch (listInfo.id) {
@@ -84,6 +85,7 @@ export default forwardRef<ListMenuType, ListMenuProps>(({
         userList = listInfo as LX.List.UserListInfo
         rename = true
         remove = true
+        change_position = true
         sync = !!(userList.source && musicSdk[userList.source]?.songList)
         break
     }
@@ -94,7 +96,7 @@ export default forwardRef<ListMenuType, ListMenuProps>(({
       { action: 'sort', label: t('list_sort') },
       { action: 'duplicateMusic', label: t('lists__duplicate') },
       { action: 'local_file', disabled: !local_file, label: t('list_select_local_file') },
-      { action: 'changePosition', label: t('change_position') },
+      { action: 'changePosition', disabled: !change_position, label: t('change_position') },
       { action: 'sync', disabled: !sync || !local_file, label: t('list_sync') },
       { action: 'import', label: t('list_import') },
       { action: 'export', label: t('list_export') },
