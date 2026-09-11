@@ -154,10 +154,28 @@ export const setResource = (musicInfo: LX.Player.PlayMusic, url: string, duratio
   playMusic(musicInfo, url, duration ?? 0)
 }
 
-export const setPlay = async() => TrackPlayer.play()
+// 蓝牙/耳机断开导致播放被打断后，ExoPlayer 的音频输出可能仍指向已断开的设备，
+// 恢复播放会显示播放中但没有声音，此时需先重建播放器的音频渲染管线再恢复播放
+let isAudioInterrupted = false
+
+export const listenAudioInterruption = () => {
+  TrackPlayer.addEventListener(Event.RemoteDuck, ({ paused, ducking }) => {
+    if (paused && !ducking) isAudioInterrupted = true
+  })
+}
+
+export const setPlay = async() => {
+  if (!isAudioInterrupted) return TrackPlayer.play()
+  isAudioInterrupted = false
+  const position = await TrackPlayer.getPosition().catch(() => 0)
+  await TrackPlayer.stop()
+  await TrackPlayer.seekTo(position)
+  return TrackPlayer.play()
+}
 export const getPosition = async() => TrackPlayer.getPosition()
 export const getDuration = async() => TrackPlayer.getDuration()
 export const setStop = async() => {
+  isAudioInterrupted = false
   await TrackPlayer.stop()
   // 队列末尾是静音占位轨道，播完自动前进后可能已无下一首，跳过失败忽略即可
   if (!isEmpty()) await TrackPlayer.skipToNext().catch(() => {})
