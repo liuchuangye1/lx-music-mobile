@@ -164,18 +164,21 @@ export const listenAudioInterruption = () => {
   })
 }
 
-export const setPlay = async() => {
+export const setPlay = async(): Promise<boolean> => {
   const state = await TrackPlayer.getState()
   // 杀进程后服务重建等场景，原生播放器可能处于未 prepare 的空转状态，直接 play() 无效，
-  // 与音频被打断后的情况相同，都需先 stop 重建音频渲染管线、回到原进度后再播放
+  // 与音频被打断后的情况相同，都需先 stop 重建音频渲染管线、回到原进度后再播放；
+  // 若原生播放队列已被清空（无可播放曲目），返回 false 由调用方重新加载当前歌曲
   if (isAudioInterrupted || state == State.None || state == State.Stopped) {
     isAudioInterrupted = false
     const position = await TrackPlayer.getPosition().catch(() => 0)
     await TrackPlayer.stop()
     await TrackPlayer.seekTo(position)
-    return TrackPlayer.play()
+    const queue = await TrackPlayer.getQueue()
+    if (!queue?.length) return false
   }
-  return TrackPlayer.play()
+  await TrackPlayer.play()
+  return true
 }
 export const getPosition = async() => TrackPlayer.getPosition()
 export const getDuration = async() => TrackPlayer.getDuration()

@@ -132,9 +132,9 @@ const getMusicPlayUrl = async(musicInfo: LX.Music.MusicInfo | LX.Download.ListIt
   })
 }
 
-export const setMusicUrl = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, isRefresh?: boolean) => {
+export const setMusicUrl = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, isRefresh?: boolean, force?: boolean) => {
   // addLoadTimeout()
-  if (!diffCurrentMusicInfo(musicInfo)) return
+  if (!force && !diffCurrentMusicInfo(musicInfo)) return
   if (cancelDelayRetry) cancelDelayRetry()
   global.lx.gettingUrlId = createGettingUrlId(musicInfo)
   void getMusicPlayUrl(musicInfo, isRefresh).then((url) => {
@@ -600,7 +600,10 @@ export const play = () => {
     if (createGettingUrlId(playerState.playMusicInfo.musicInfo) != global.lx.gettingUrlId) setMusicUrl(playerState.playMusicInfo.musicInfo)
     return
   }
-  void setPlay()
+  void setPlay().then(ok => {
+    // 杀进程后原生播放队列可能已被清空，无法直接恢复，强制重新加载当前歌曲
+    if (!ok) setMusicUrl(playerState.playMusicInfo.musicInfo!, false, true)
+  })
 }
 
 /**
