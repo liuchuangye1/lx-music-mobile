@@ -133,6 +133,7 @@ const getMusicPlayUrl = async(musicInfo: LX.Music.MusicInfo | LX.Download.ListIt
 }
 
 export const setMusicUrl = (musicInfo: LX.Music.MusicInfo | LX.Download.ListItem, isRefresh?: boolean, force?: boolean) => {
+  console.log('[dbg] setMusicUrl enter, diff:', diffCurrentMusicInfo(musicInfo), 'force:', force)
   // addLoadTimeout()
   if (!force && !diffCurrentMusicInfo(musicInfo)) return
   if (cancelDelayRetry) cancelDelayRetry()
@@ -595,12 +596,14 @@ export const playPrev = async(isAutoToggle = false): Promise<void> => {
  * 恢复播放
  */
 export const play = () => {
+  console.log('[dbg] play tap, musicInfo:', playerState.playMusicInfo.musicInfo?.id, 'isEmpty:', isEmpty(), 'gettingUrlId:', global.lx.gettingUrlId)
   if (playerState.playMusicInfo.musicInfo == null) return
   if (isEmpty()) {
     if (createGettingUrlId(playerState.playMusicInfo.musicInfo) != global.lx.gettingUrlId) setMusicUrl(playerState.playMusicInfo.musicInfo)
     return
   }
   void setPlay().then(ok => {
+    console.log('[dbg] setPlay ok:', ok)
     // 杀进程后原生播放队列可能已被清空，无法直接恢复，强制重新加载当前歌曲
     if (!ok) setMusicUrl(playerState.playMusicInfo.musicInfo!, false, true)
   })

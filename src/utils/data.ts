@@ -348,8 +348,16 @@ export const hasMusicUrlByMusic = async(musicInfo: LX.Music.MusicInfo) => {
 export const clearMusicUrlByMusic = async(musicInfo: LX.Music.MusicInfo) => {
   await removeDataMultiple(qualitys.map(q => `${storageDataPrefix.musicUrl}${musicInfo.id}_${q}`))
 }
-export const getMusicUrl = async(musicInfo: LX.Music.MusicInfo, type: LX.Quality) => getData<string>(`${storageDataPrefix.musicUrl}${musicInfo.id}_${type}`).then((url) => url ?? '')
-export const saveMusicUrl = async(musicInfo: LX.Music.MusicInfo, type: LX.Quality, url: string) => saveData(`${storageDataPrefix.musicUrl}${musicInfo.id}_${type}`, url)
+// 音乐平台的播放链接多为带签名的时效链接，缓存过期后继续使用会导致播放一直缓冲且无错误提示，
+// 因此缓存附带写入时间，超过时效（10分钟）视为过期重新获取；旧版本的裸字符串缓存同样视为过期
+const musicUrlExpiration = 10 * 60 * 1000
+
+export const getMusicUrl = async(musicInfo: LX.Music.MusicInfo, type: LX.Quality): Promise<string> => {
+  const data = await getData<string | { url: string, time: number }>(`${storageDataPrefix.musicUrl}${musicInfo.id}_${type}`)
+  if (!data || typeof data === 'string') return ''
+  return Date.now() - data.time > musicUrlExpiration ? '' : data.url
+}
+export const saveMusicUrl = async(musicInfo: LX.Music.MusicInfo, type: LX.Quality, url: string) => saveData(`${storageDataPrefix.musicUrl}${musicInfo.id}_${type}`, { url, time: Date.now() })
 export const clearMusicUrl = async(keys?: string[]) => {
   if (!keys) keys = (await getAllKeys()).filter(key => key.startsWith(storageDataPrefix.musicUrl))
   await removeDataMultiple(keys)
