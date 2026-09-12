@@ -27,7 +27,9 @@ const defaultSetting: LX.AppSetting = {
   'player.timeoutExitPlayed': true,
   'player.isAutoCleanPlayedList': false,
   'player.isHandleAudioFocus': true,
-  'player.isEnableAudioOffload': true,
+  // 部分设备系统层的 audio offload 存在 bug（上游设置文案亦已提及），实测蓝牙这类输出设备
+  // 切换场景必然异常：断开后恢复播放显示播放中但无声，连接时渲染报错被当作播放错误跳歌，故默认关闭
+  'player.isEnableAudioOffload': false,
   'player.isShowLyricTranslation': false,
   'player.isShowLyricRoma': false,
   'player.isShowNotificationImage': true,
