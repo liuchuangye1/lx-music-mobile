@@ -82,7 +82,7 @@ const registerPlaybackService = async() => {
     // let currentIsPlaying = false
 
     // App 在后台时播放被停止（划卡杀进程等），标记之：拦截后台延迟回调重新拉起播放
-    if (info.state === TPState.Stopped && AppState.currentState !== 'active') global.lx.isStoppedByExit = true
+    if ((info.state === TPState.Stopped || info.state === TPState.None) && AppState.currentState !== 'active') global.lx.isStoppedByExit = true
 
     switch (info.state) {
       case TPState.None:
