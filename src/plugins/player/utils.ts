@@ -166,16 +166,13 @@ export const listenAudioInterruption = () => {
 
 export const setPlay = async(): Promise<boolean> => {
   const state = await TrackPlayer.getState()
-  // 杀进程后服务重建等场景，原生播放器可能处于未 prepare 的空转状态，直接 play() 无效，
-  // 与音频被打断后的情况相同，都需先 stop 重建音频渲染管线、回到原进度后再播放；
-  // 若原生播放队列已被清空（无可播放曲目），返回 false 由调用方重新加载当前歌曲
+  // 音频被打断（蓝牙断开等输出设备变化）后旧 AudioTrack 已失效，真机实测部分系统上对它
+  // 执行 stop 时排空会永久阻塞（写线程卡在 waitStreamEndDone，表现为显示播放中但没有
+  // 声音），因此此时与原生队列空转/队列被清空的情况一样，返回 false 由调用方重新加载
+  // 当前歌曲、走整条重建管线恢复（与切歌路径一致，实测可正常出声），不要在此 stop+seek+play
   if (isAudioInterrupted || state == State.None || state == State.Stopped) {
     isAudioInterrupted = false
-    const position = await TrackPlayer.getPosition().catch(() => 0)
-    await TrackPlayer.stop()
-    await TrackPlayer.seekTo(position)
-    const queue = await TrackPlayer.getQueue()
-    if (!queue?.length) return false
+    return false
   }
   await TrackPlayer.play()
   return true
