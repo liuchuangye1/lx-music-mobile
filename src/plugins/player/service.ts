@@ -7,6 +7,7 @@ import { isTempId, isEmpty } from './utils'
 import { exitApp } from '@/core/common'
 import { getCurrentTrackId } from './playList'
 import { pause, play, playNext, playPrev } from '@/core/player/player'
+import { AppState } from 'react-native'
 
 let isInitialized = false
 
@@ -79,6 +80,9 @@ const registerPlaybackService = async() => {
   TrackPlayer.addEventListener(TPEvent.PlaybackState, async info => {
     if (global.lx.gettingUrlId || isTempId()) return
     // let currentIsPlaying = false
+
+    // App 在后台时播放被停止（划卡杀进程等），标记之：拦截后台延迟回调重新拉起播放
+    if (info.state === TPState.Stopped && AppState.currentState !== 'active') global.lx.isStoppedByExit = true
 
     switch (info.state) {
       case TPState.None:

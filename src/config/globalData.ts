@@ -40,6 +40,9 @@ global.lx = {
   // 是否播放完后退出应用
   isPlayedStop: false,
 
+  // 划卡杀进程等场景停止播放后置位，用于拦截后台延迟回调拉起播放；App 回到前台后忽略此标记
+  isStoppedByExit: false,
+
   // prevListPlayIndex: -1,
 
   // syncKeyInfo: {},

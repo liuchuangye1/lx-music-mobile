@@ -1,4 +1,5 @@
 import TrackPlayer, { State } from 'react-native-track-player'
+import { AppState } from 'react-native'
 import BackgroundTimer from 'react-native-background-timer'
 import { defaultUrl } from '@/config'
 // import { action as playerAction } from '@/store/modules/player'
@@ -203,6 +204,9 @@ export const playMusic = (musicInfo: LX.Player.PlayMusic, url: string, time: num
   const id = actionId = Math.random()
   void playPromise.finally(() => {
     if (id != actionId) return
+    // 划卡杀进程等场景停止播放后，延迟完成的异步回调（预加载、链接刷新等）不应再拉起播放；
+    // App 回到前台（active）后此标记不再生效
+    if (global.lx.isStoppedByExit && AppState.currentState !== 'active') return
     playPromise = handlePlayMusic(musicInfo, url, time)
   })
 }
