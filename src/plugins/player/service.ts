@@ -81,8 +81,10 @@ const registerPlaybackService = async() => {
     if (global.lx.gettingUrlId || isTempId()) return
     // let currentIsPlaying = false
 
-    // App 在后台时播放被停止（划卡杀进程等），标记之：拦截后台延迟回调重新拉起播放
-    if ((info.state === TPState.Stopped || info.state === TPState.None) && AppState.currentState !== 'active') global.lx.isStoppedByExit = true
+    // 播放进入停止/空闲状态时置标记，用于拦截杀进程后延迟完成的异步回调重新拉起播放；
+    // 恢复播放（Playing）后自动清除，不影响正常使用
+    if (info.state === TPState.Stopped || info.state === TPState.None) global.lx.isStoppedByExit = true
+    if (info.state === TPState.Playing) global.lx.isStoppedByExit = false
 
     switch (info.state) {
       case TPState.None:
@@ -215,4 +217,8 @@ export default () => {
   console.log('handle registerPlaybackService...')
   TrackPlayer.registerPlaybackService(() => registerPlaybackService)
   global.lx.playerStatus.isRegisteredService = true
+  // 用户重新打开 App 后解除“因退出而停止”的标记，恢复正常播放
+  AppState.addEventListener('change', state => {
+    if (state === 'active') global.lx.isStoppedByExit = false
+  })
 }
